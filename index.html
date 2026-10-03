@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>מאמן קולי – מכונות</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&family=Secular+One&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F2F1EC; --ink:#1D2024; --muted:#6B737B; --line:#D9D8D2; --panel:#FFFFFF;
+  --blue:#1F5AA6; --red:#C8312B; --ok:#2E7D4F;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15181B; --ink:#ECEDEA; --muted:#98A0A8; --line:#2C3136; --panel:#1D2125;
+    --blue:#5B93E3; --red:#E3605A; --ok:#5DBB86;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15181B; --ink:#ECEDEA; --muted:#98A0A8; --line:#2C3136; --panel:#1D2125;
+  --blue:#5B93E3; --red:#E3605A; --ok:#5DBB86;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Assistant",Arial,"Segoe UI",sans-serif;font-size:17px;line-height:1.45}
+main{max-width:520px;margin:0 auto;padding:16px 18px 40px}
+h1{font-family:"Secular One","Assistant",Arial,sans-serif;font-weight:400;font-size:1.25rem;margin:4px 0 14px}
+.readout{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center;
+  padding:18px 0;border-top:3px solid var(--ink);border-bottom:1px solid var(--line)}
+.pin{width:92px;height:92px;border-radius:50%;border:6px solid var(--ink);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-family:"Secular One",Arial,sans-serif;line-height:1}
+.pin small{font-family:"Assistant",Arial,sans-serif;font-size:.75rem;color:var(--muted);margin-bottom:2px}
+.pin b{font-weight:400;font-size:2.4rem}
+.weight{font-family:"Secular One",Arial,sans-serif;font-size:3.4rem;line-height:1}
+.weight span{font-size:1.1rem;color:var(--muted);margin-inline-start:4px}
+.sub{color:var(--muted);font-size:1rem;margin-top:4px}
+.target{display:flex;gap:18px;margin-top:8px;font-size:1.05rem}
+.target strong{font-weight:700}
+.empty{color:var(--muted);font-size:1.05rem}
+.talk{display:flex;flex-direction:column;align-items:center;margin:26px 0 8px}
+#mic{width:128px;height:128px;border-radius:50%;border:none;cursor:pointer;
+  background:var(--blue);color:#fff;font-family:"Secular One",Arial,sans-serif;font-size:1.15rem;
+  box-shadow:0 0 0 0 transparent;transition:background .15s, box-shadow .15s}
+#mic.on{background:var(--red);box-shadow:0 0 0 10px color-mix(in srgb,var(--red) 25%,transparent)}
+#mic:disabled{background:var(--line);color:var(--muted);cursor:not-allowed}
+#mic:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+.heard{min-height:1.4em;margin-top:14px;color:var(--muted);text-align:center}
+.said{min-height:1.4em;margin-top:4px;font-weight:600;text-align:center}
+.note{font-size:.92rem;color:var(--muted);text-align:center;margin:6px 0 0}
+.note.warn{color:var(--red)}
+section{margin-top:26px}
+.dict{margin-top:22px}
+.dict input{font-size:1.25rem;padding:16px 14px;border:2px solid var(--blue)}
+.dict .hint{font-size:.95rem;color:var(--muted);margin:6px 0 0}
+
+h2{font-size:1rem;font-weight:700;margin:0 0 8px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+input{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);
+  border-radius:8px;padding:10px 12px;min-width:0;flex:1}
+input[type=number]{max-width:110px}
+button.act{font:inherit;font-weight:700;color:#fff;background:var(--ink);border:none;border-radius:8px;
+  padding:10px 16px;cursor:pointer}
+:root .act.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+label{font-size:.85rem;color:var(--muted);display:block;margin-bottom:3px}
+.field{display:flex;flex-direction:column;flex:1;min-width:90px}
+.help{font-size:.95rem;color:var(--muted)}
+.help p{margin:4px 0}
+.help code{font-family:inherit;color:var(--ink);font-weight:600}
+ul.list{list-style:none;padding:0;margin:0}
+ul.list li{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer}
+ul.list li b{font-family:"Secular One",Arial,sans-serif;font-weight:400;min-width:2.2em}
+.store{font-size:.8rem;color:var(--muted);text-align:center;margin-top:26px}
+details summary{cursor:pointer;font-weight:700}
+@media (prefers-reduced-motion: reduce){#mic{transition:none}}
+</style>
+</head>
+<body>
+<main>
+  <h1>מאמן קולי למכונות</h1>
+
+  <div class="readout" aria-live="polite">
+    <div class="pin"><small>מכונה</small><b id="mNum">–</b></div>
+    <div id="info"><div class="empty">אמור מספר מכונה כדי להתחיל</div></div>
+  </div>
+
+  <div class="talk">
+    <button id="mic" type="button" aria-label="לחץ ודבר">לחץ ודבר</button>
+    <div class="heard" id="heard"></div>
+    <div class="said" id="said"></div>
+    <p class="note" id="micNote"></p>
+  </div>
+
+
+  <section class="dict">
+    <h2>אם הכפתור לא עובד</h2>
+    <div class="row">
+      <input id="cmd" type="text" inputmode="text" enterkeyhint="go" placeholder="לחץ כאן ואז על 🎤 במקלדת" autocomplete="off" autocorrect="off" spellcheck="false">
+      <button class="act" id="cmdGo" type="button">בצע</button>
+    </div>
+    <p class="hint">גיבוי: לחץ כאן ואז על 🎤 במקלדת. הפקודה מתבצעת לבד אחרי שנייה וחצי של שקט.</p>
+  </section>
+
+  <section>
+    <h2>שמירה ידנית</h2>
+    <div class="row">
+      <div class="field"><label for="fM">מכונה</label><input id="fM" type="number" inputmode="numeric" min="1"></div>
+      <div class="field"><label for="fW">משקל (ק״ג)</label><input id="fW" type="number" inputmode="decimal" step="0.5" min="0"></div>
+      <div class="field"><label for="fR">חזרות</label><input id="fR" type="number" inputmode="numeric" min="1"></div>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <button class="act" id="fSave" type="button">שמור סט</button>
+      <div class="field" style="flex:0 1 110px"><input id="fT" type="number" inputmode="numeric" min="1" placeholder="יעד חזרות" aria-label="יעד חזרות"></div>
+      <button class="act ghost" id="fTarget" type="button">קבע יעד</button>
+    </div>
+  </section>
+
+  <section>
+    <details>
+      <summary>מה אפשר להגיד</summary>
+      <div class="help">
+        <p><code>מכונה 7</code> או רק <code>7</code> – מקריא משקל אחרון, חזרות ויעד.</p>
+        <p><code>45 קילו 10 חזרות</code> – שומר סט במכונה הפתוחה.</p>
+        <p><code>יעד 12</code> – קובע יעד חזרות למכונה הפתוחה.</p>
+        <p><code>בטל</code> – מוחק את הסט האחרון של המכונה הפתוחה.</p>
+        <p><code>חזור</code> – מקריא שוב.</p>
+      </div>
+    </details>
+  </section>
+
+  <section>
+    <h2>כל המכונות</h2>
+    <ul class="list" id="list"></ul>
+  </section>
+
+  <section>
+    <h2>גיבוי</h2>
+    <div class="row">
+      <button class="act ghost" id="bkCopy" type="button">העתק גיבוי</button>
+      <button class="act ghost" id="bkLoad" type="button">שחזר מגיבוי</button>
+    </div>
+    <p class="help" id="bkNote">לחץ "העתק גיבוי" והדבק בפתקים פעם בשבוע, ליתר ביטחון.</p>
+  </section>
+
+  <p class="store" id="storeNote">שמירה: בטלפון הזה (Safari)</p>
+</main>
+
+<script>
+(function(){
+  "use strict";
+  var LS_KEY = "gymVoice.v1";
+  var store = { machines: {} };
+  var current = null;
+  var lastSpoken = "";
+  var dbRef = null;
+  var writing = Promise.resolve();
+
+  /* ---------- storage ---------- */
+  function loadLocal(){
+    try{ var raw = localStorage.getItem(LS_KEY); if(raw){ var d = JSON.parse(raw); if(d && d.machines) return d; } }catch(e){}
+    return null;
+  }
+  function saveLocal(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(store)); }catch(e){} }
+  function persist(){
+    store.updatedAt = Date.now();
+    saveLocal();
+    if(dbRef){
+      var snapshot = JSON.parse(JSON.stringify(store));
+      writing = writing.then(function(){ return dbRef.set(snapshot); }).catch(function(){
+        document.getElementById("storeNote").textContent = "שמירה בענן נכשלה – נשמר בדפדפן הזה בלבד";
+      });
+    }
+  }
+  var local = loadLocal();
+  if(local) store = local;
+
+  async function initDb(){
+    try{
+      if(!window.claude || typeof window.claude.use !== "function") return;
+      var db = await window.claude.use("db");
+      var user = await window.claude.use("user");
+      if(!db || !user) return;
+      var id = await user.id();
+      if(!id) return;
+      dbRef = db.doc("data/users/" + id + "/gym");
+      var snap = await dbRef.get();
+      if(snap.exists){
+        var remote = JSON.parse(JSON.stringify(snap.data()));
+        if(remote && remote.machines && (!store.updatedAt || (remote.updatedAt||0) >= store.updatedAt)){
+          store = remote; saveLocal();
+        } else { persist(); }
+      } else if(Object.keys(store.machines).length){
+        persist();
+      }
+      document.getElementById("storeNote").textContent = "שמירה: בחשבון Claude שלך (נשמר בין מכשירים)";
+      render();
+    }catch(e){ /* stay on local storage */ }
+  }
+
+  /* ---------- data helpers ---------- */
+  function M(n){
+    var k = String(n);
+    if(!store.machines[k]) store.machines[k] = { target: null, history: [] };
+    return store.machines[k];
+  }
+  function fmtKg(w){ return (Math.round(w*10)/10).toString(); }
+
+  /* ---------- speech out ---------- */
+  var heVoice = null;
+  function pickVoice(){
+    if(!("speechSynthesis" in window)) return;
+    var vs = speechSynthesis.getVoices();
+    heVoice = vs.find(function(v){ return /^he|^iw/i.test(v.lang); }) || null;
+  }
+  if("speechSynthesis" in window){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+  function say(text){
+    lastSpoken = text;
+    document.getElementById("said").textContent = text;
+    if(!("speechSynthesis" in window)) return;
+    try{
+      speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = "he-IL";
+      if(heVoice) u.voice = heVoice;
+      u.rate = 1;
+      speechSynthesis.speak(u);
+    }catch(e){}
+  }
+
+  /* ---------- actions ---------- */
+  function describe(n){
+    var m = store.machines[String(n)];
+    var parts = ["מכונה " + n + "."];
+    if(!m || !m.history.length) parts.push("אין עדיין סט שמור.");
+    else parts.push("משקל אחרון " + fmtKg(m.history[0].kg) + " קילו, " + m.history[0].reps + " חזרות.");
+    if(m && m.target) parts.push("יעד: " + m.target + " חזרות.");
+    else parts.push("אין יעד חזרות.");
+    return parts.join(" ");
+  }
+  function selectMachine(n){
+    current = n;
+    document.getElementById("fM").value = n;
+    render();
+    say(describe(n));
+  }
+  function logSet(kg, reps){
+    if(current == null){ say("קודם תגיד מספר מכונה."); return; }
+    if(!(kg >= 0) || !(reps >= 1)){ say("לא הבנתי משקל וחזרות."); return; }
+    var m = M(current);
+    m.history.unshift({ kg: kg, reps: Math.round(reps), at: Date.now() });
+    if(m.history.length > 15) m.history.length = 15;
+    persist(); render();
+    var msg = "נשמר: מכונה " + current + ", " + fmtKg(kg) + " קילו, " + Math.round(reps) + " חזרות.";
+    if(m.target && reps >= m.target) msg += " עמדת ביעד.";
+    say(msg);
+  }
+  function setTarget(t){
+    if(current == null){ say("קודם תגיד מספר מכונה."); return; }
+    if(!(t >= 1)){ say("לא הבנתי את היעד."); return; }
+    M(current).target = Math.round(t);
+    persist(); render();
+    say("יעד מכונה " + current + ": " + Math.round(t) + " חזרות.");
+  }
+  function undo(){
+    if(current == null){ say("קודם תגיד מספר מכונה."); return; }
+    var m = store.machines[String(current)];
+    if(!m || !m.history.length){ say("אין סט למחוק במכונה " + current + "."); return; }
+    m.history.shift(); persist(); render();
+    say("נמחק הסט האחרון. " + describe(current));
+  }
+
+  /* ---------- Hebrew number parsing ---------- */
+  var WORDS = {
+    "אפס":0,"אחד":1,"אחת":1,"שניים":2,"שתיים":2,"שתים":2,"שנים":2,"שני":2,"שתי":2,"שלוש":3,"שלושה":3,"שלושת":3,
+    "ארבע":4,"ארבעה":4,"ארבעת":4,"חמש":5,"חמישה":5,"חמשת":5,"שש":6,"שישה":6,"ששת":6,
+    "שבע":7,"שבעה":7,"שבעת":7,"שמונה":8,"שמונת":8,"תשע":9,"תשעה":9,"תשעת":9,"עשר":10,"עשרה":10,"עשרת":10,
+    "עשרים":20,"שלושים":30,"ארבעים":40,"חמישים":50,"שישים":60,"שבעים":70,"שמונים":80,"תשעים":90,
+    "מאה":100,"מאתיים":200
+  };
+  function wordVal(tok){
+    if(/^\d+(\.\d+)?$/.test(tok)) return { v: parseFloat(tok), digit: true };
+    if(WORDS.hasOwnProperty(tok)) return { v: WORDS[tok] };
+    if(tok.length > 1 && tok[0] === "ו"){
+      var r = tok.slice(1);
+      if(/^\d+(\.\d+)?$/.test(r)) return { v: parseFloat(r), digit: true };
+      if(WORDS.hasOwnProperty(r)) return { v: WORDS[r] };
+    }
+    return null;
+  }
+  function parseNumbers(text){
+    var toks = text.replace(/[,?!;:"״׳']/g," ").replace(/(\d)\s*\.\s*(\d)/g,"$1.$2")
+                   .replace(/(\d)(?=[א-ת])/g,"$1 ").replace(/([א-ת])(?=\d)/g,"$1 ")
+                   .split(/\s+/).filter(Boolean)
+                   .map(function(t){ return t.replace(/\.$/,""); });
+    var items = [], cur = null, lastWasTeenable = false;
+    function push(label){ if(cur != null){ items.push({ value: cur, label: label || "" }); cur = null; } }
+    for(var i=0;i<toks.length;i++){
+      var t = toks[i];
+      if(t === "חצי" || t === "וחצי"){ if(cur != null) cur += 0.5; continue; }
+      var w = wordVal(t);
+      if(w){
+        if(cur == null){ cur = w.v; }
+        else if(w.digit){ push(""); cur = w.v; }
+        else if(w.v === 10 && cur < 10){ cur += 10; }
+        else if(cur >= 100 && cur % 100 === 0 && w.v < 100){ cur += w.v; }
+        else if(cur >= 20 && cur % 10 === 0 && w.v < 10){ cur += w.v; }
+        else { push(""); cur = w.v; }
+      } else {
+        push(t);
+      }
+    }
+    push("");
+    return items;
+  }
+  function isKg(l){ return /^(קילו|קילוגרם|קג|ק״ג|kg|kilo|kilos)$/i.test(l.replace(/["״]/g,"")) || /^קילו/.test(l); }
+  function isReps(l){ return /^(חזרות|חזרה|פעמים|reps?)$/i.test(l); }
+
+  /* ---------- command interpreter ---------- */
+  function run(text){
+    var t = (text || "").trim();
+    if(!t) return;
+    document.getElementById("heard").textContent = "שמעתי: " + t;
+    var nums = parseNumbers(t);
+    var has = function(re){ return re.test(t); };
+
+    if(has(/בטל|ביטול|מחק|undo/i)) return undo();
+    if(has(/חזור|שוב|repeat/i) && !nums.length){ return lastSpoken ? say(lastSpoken) : say("אין מה לחזור."); }
+    if(has(/יעד|מטרה|target/i)){
+      if(has(/מכונה|מכשיר|machine/i) && nums.length >= 2){ current = Math.round(nums[0].value); return setTarget(nums[1].value); }
+      if(nums.length) return setTarget(nums[nums.length-1].value);
+      return say("כמה חזרות היעד?");
+    }
+    if(has(/מכונה|מכשיר|machine/i) && nums.length){
+      var n = Math.round(nums[0].value);
+      if(nums.length >= 3){ current = n; return logSet(nums[1].value, nums[2].value); }
+      return selectMachine(n);
+    }
+    if(nums.length >= 2){
+      var kg = null, reps = null, used = [];
+      nums.forEach(function(x, i){
+        if(kg == null && isKg(x.label)){ kg = x.value; used.push(i); }
+        else if(reps == null && isReps(x.label)){ reps = x.value; used.push(i); }
+      });
+      var rest = nums.filter(function(x, i){ return used.indexOf(i) < 0; });
+      if(kg == null && rest.length) kg = rest.shift().value;
+      if(reps == null && rest.length) reps = rest.shift().value;
+      return logSet(kg, reps);
+    }
+    if(nums.length === 1){
+      var one = nums[0];
+      if(isReps(one.label) && current != null){
+        var m = store.machines[String(current)];
+        var lastKg = (m && m.history.length) ? m.history[0].kg : null;
+        if(lastKg == null) return say("כמה קילו?");
+        return logSet(lastKg, one.value);
+      }
+      if(isKg(one.label)) return say("כמה חזרות עשית?");
+      return selectMachine(Math.round(one.value));
+    }
+    say("לא הבנתי. אמור למשל: מכונה 7.");
+  }
+
+  /* ---------- speech in ---------- */
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var mic = document.getElementById("mic");
+  var note = document.getElementById("micNote");
+  var rec = null, listening = false;
+  function showBlocked(){
+    note.textContent = "המיקרופון חסום כאן. ב-Safari: לחץ על aA בשורת הכתובת ← הגדרות אתר ← מיקרופון ← אפשר. ודא גם ש'הכתבה' מופעלת בהגדרות המקלדת.";
+    note.className = "note warn";
+  }
+  function resetMic(){ listening = false; mic.classList.remove("on"); mic.textContent = "לחץ ודבר"; }
+  if(!SR){
+    mic.disabled = true; mic.textContent = "אין זיהוי דיבור";
+    note.textContent = "הדפדפן הזה לא תומך בזיהוי דיבור. השתמש בשדה למטה.";
+  } else {
+    mic.addEventListener("click", function(){
+      if(listening && rec){ try{ rec.stop(); }catch(e){} return; }
+      try{ if("speechSynthesis" in window) speechSynthesis.cancel(); }catch(e){}
+      note.textContent = ""; note.className = "note";
+      /* new instance every time: iOS Safari can hang when one is reused */
+      rec = new SR();
+      rec.lang = "he-IL";
+      rec.interimResults = false;
+      rec.maxAlternatives = 1;
+      rec.continuous = false;
+      rec.onresult = function(e){ run(e.results[0][0].transcript); };
+      rec.onerror = function(e){
+        resetMic();
+        if(e.error === "not-allowed" || e.error === "service-not-allowed"){ showBlocked(); }
+        else if(e.error === "no-speech"){ note.textContent = "לא שמעתי כלום. נסה שוב."; }
+        else if(e.error !== "aborted"){ note.textContent = "שגיאת זיהוי: " + e.error; note.className = "note warn"; }
+      };
+      rec.onend = resetMic;
+      try{
+        rec.start(); listening = true;
+        mic.classList.add("on"); mic.textContent = "מקשיב…";
+      }catch(e){ resetMic(); note.textContent = "לא הצלחתי להפעיל את המיקרופון."; note.className = "note warn"; }
+    });
+  }
+
+  /* ---------- manual controls ---------- */
+  function $(id){ return document.getElementById(id); }
+  $("cmdGo").addEventListener("click", function(){ runField(); });
+  var idleTimer = null;
+  function runField(){
+    clearTimeout(idleTimer);
+    var v = $("cmd").value;
+    if(!v.trim()) return;
+    $("cmd").value = "";
+    run(v);
+  }
+  $("cmd").addEventListener("keydown", function(e){ if(e.key === "Enter"){ e.preventDefault(); runField(); } });
+  $("cmd").addEventListener("input", function(){
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(runField, 1500);
+  });
+  $("fM").addEventListener("change", function(){ var n = parseInt($("fM").value,10); if(n >= 1) selectMachine(n); });
+  $("fSave").addEventListener("click", function(){
+    var n = parseInt($("fM").value,10);
+    if(n >= 1) current = n;
+    logSet(parseFloat($("fW").value), parseInt($("fR").value,10));
+  });
+  $("fTarget").addEventListener("click", function(){
+    var n = parseInt($("fM").value,10);
+    if(n >= 1) current = n;
+    setTarget(parseInt($("fT").value,10));
+  });
+
+  /* ---------- render ---------- */
+  function render(){
+    $("mNum").textContent = current == null ? "–" : current;
+    var info = $("info");
+    info.innerHTML = "";
+    if(current == null){
+      var e0 = document.createElement("div"); e0.className = "empty"; e0.textContent = "אמור מספר מכונה כדי להתחיל"; info.appendChild(e0);
+    } else {
+      var m = store.machines[String(current)];
+      if(m && m.history.length){
+        var h = m.history[0];
+        var w = document.createElement("div"); w.className = "weight";
+        w.textContent = fmtKg(h.kg); var u = document.createElement("span"); u.textContent = "ק״ג"; w.appendChild(u);
+        info.appendChild(w);
+        var s = document.createElement("div"); s.className = "sub";
+        s.textContent = h.reps + " חזרות בסט האחרון, " + new Date(h.at).toLocaleDateString("he-IL");
+        info.appendChild(s);
+      } else {
+        var e1 = document.createElement("div"); e1.className = "empty"; e1.textContent = "אין סט שמור למכונה הזו"; info.appendChild(e1);
+      }
+      var tg = document.createElement("div"); tg.className = "target";
+      var st = document.createElement("strong");
+      st.textContent = (m && m.target) ? ("יעד: " + m.target + " חזרות") : "אין יעד חזרות";
+      tg.appendChild(st); info.appendChild(tg);
+      if(m && m.target) $("fT").value = m.target;
+    }
+    var list = $("list"); list.innerHTML = "";
+    var keys = Object.keys(store.machines).sort(function(a,b){ return a-b; });
+    if(!keys.length){
+      var li0 = document.createElement("li"); li0.style.cursor = "default";
+      li0.textContent = "עוד אין מכונות. אמור מספר מכונה ואז את הסט."; list.appendChild(li0);
+    }
+    keys.forEach(function(k){
+      var m = store.machines[k];
+      var li = document.createElement("li");
+      var b = document.createElement("b"); b.textContent = k;
+      var d = document.createElement("span");
+      var last = m.history.length ? (fmtKg(m.history[0].kg) + " ק״ג × " + m.history[0].reps) : "אין סט";
+      d.textContent = last + (m.target ? ("   יעד " + m.target) : "");
+      li.appendChild(b); li.appendChild(d);
+      li.addEventListener("click", function(){ selectMachine(parseInt(k,10)); window.scrollTo({top:0,behavior:"smooth"}); });
+      list.appendChild(li);
+    });
+  }
+
+  $("bkCopy").addEventListener("click", function(){
+    var txt = JSON.stringify(store);
+    var done = function(){ $("bkNote").textContent = "הגיבוי הועתק. הדבק אותו בפתקים."; };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(done, function(){ window.prompt("העתק את הטקסט:", txt); });
+    } else { window.prompt("העתק את הטקסט:", txt); }
+  });
+  $("bkLoad").addEventListener("click", function(){
+    var txt = window.prompt("הדבק כאן את טקסט הגיבוי:");
+    if(!txt) return;
+    try{
+      var d = JSON.parse(txt);
+      if(!d || typeof d.machines !== "object") throw 0;
+      if(!window.confirm("לשחזר? זה יחליף את הנתונים הנוכחיים.")) return;
+      store = d; persist(); render();
+      $("bkNote").textContent = "שוחזר: " + Object.keys(store.machines).length + " מכונות.";
+    }catch(e){ $("bkNote").textContent = "הטקסט שהודבק אינו גיבוי תקין."; }
+  });
+
+  render();
+  initDb();
+})();
+</script>
+</body>
+</html>
